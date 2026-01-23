@@ -60,8 +60,10 @@ RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
 # ------------------------------
 # 5. Core Libraries & Jupyter
 # ------------------------------
+# Python 3.13 に対応するため、JupyterLabのバージョン固定(3.6.5)を解除し、最新版(v4系)を入れます。
+# これにより互換性のない古い y-py が除外され、ビルドが通るようになります。
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
-    jupyterlab==3.6.5 notebook jupyter-server-proxy \
+    jupyterlab notebook jupyter-server-proxy \
     ninja packaging wheel setuptools
 
 # ------------------------------
