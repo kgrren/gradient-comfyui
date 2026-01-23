@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
-LABEL maintainer="User"
+LABEL maintainer="kgrren"
 
 # ------------------------------
 # 1. Environment Variables
