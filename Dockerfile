@@ -85,7 +85,7 @@ RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
 
 # Flash Attention & SageAttention
 # ※ Flash-attnはビルド済みホイールがない場合、ビルドに時間がかかりますがuvが管理します
-RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python flash-attn --no-build-isolation
+# RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python flash-attn --no-build-isolation
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python sageattention
 
 # ------------------------------
