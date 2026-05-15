@@ -15,20 +15,21 @@ ENV DEBIAN_FRONTEND=noninteractive \
     CUDA_HOME=/usr/local/cuda \
     TORCH_CUDA_ARCH_LIST="8.6" \
     FORCE_CUDA="1" \
-    # Python 3.13でのビルドエラー回避のための設定
-    SETUPTOOLS_SCM_PRETEND_VERSION_FOR_UV="0.0.1"
+    # Python 3.13でのビルドエラー回避
+    SETUPTOOLS_SCM_PRETEND_VERSION_FOR_UV="0.0.1" \
+    # Hugging Face 高速転送の有効化 [追加]
+    HF_HUB_ENABLE_HF_TRANSFER=1
 
 # ------------------------------
 # 2. System Packages
 # ------------------------------
+# aria2 を追加 [修正]
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget curl git nano vim unzip zip \
     libgl1 libglib2.0-0 libgoogle-perftools4 \
     build-essential python3-dev \
-    ffmpeg \
-    bzip2 ca-certificates \
-    # ComfyUIの映像・音声処理で必要になることが多いライブラリ
-    libsndfile1 \
+    ffmpeg bzip2 ca-certificates \
+    libsndfile1 aria2 \
     && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------
@@ -42,26 +43,23 @@ RUN set -ex; \
     rm /tmp/micromamba.tar.bz2; \
     mkdir -p $MAMBA_ROOT_PREFIX; \
     micromamba shell init -s bash; \
-    # uvのインストール
     curl -LsSf https://astral.sh/uv/install.sh | sh && \
     mv /root/.local/bin/uv /usr/local/bin/uv; \
-    # Python 3.13 環境の作成
     micromamba create -y -n pyenv -c conda-forge python=3.13 pyyaml; \
     micromamba clean -a -y
 
 # ------------------------------
-# 4. Torch Stack (Fixed Versions)
+# 4. Torch Stack & High-speed Transfer Tools [修正]
 # ------------------------------
-# 要求仕様: Torch 2.6.0 / CUDA 12.4
+# hf_transfer を追加
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
     torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 \
+    hf_transfer huggingface_hub[cli] \
     --index-url https://download.pytorch.org/whl/cu124
 
 # ------------------------------
 # 5. Core Libraries & Jupyter
 # ------------------------------
-# Python 3.13 に対応するため、JupyterLabのバージョン固定(3.6.5)を解除し、最新版(v4系)を入れます。
-# これにより互換性のない古い y-py が除外され、ビルドが通るようになります。
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
     jupyterlab notebook jupyter-server-proxy \
     ninja packaging wheel setuptools
@@ -69,7 +67,6 @@ RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
 # ------------------------------
 # 6. ComfyUI Dependencies (Pre-install)
 # ------------------------------
-# 本体をcloneしていなくても動くように、一般的なrequirementsを先に入れておく
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
     transformers diffusers accelerate \
     numpy safetensors aiohttp pyyaml Pillow scipy tqdm psutil \
@@ -79,13 +76,9 @@ RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
 # ------------------------------
 # 7. Specialized Libraries (Nunchaku, Optimization)
 # ------------------------------
-# Nunchaku (Fixed URL)
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
     https://github.com/nunchaku-ai/nunchaku/releases/download/v1.0.1/nunchaku-1.0.1+torch2.6-cp313-cp313-linux_x86_64.whl
 
-# Flash Attention & SageAttention
-# ※ Flash-attnはビルド済みホイールがない場合、ビルドに時間がかかりますがuvが管理します
-# RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python flash-attn --no-build-isolation
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python sageattention
 
 # ------------------------------
@@ -103,7 +96,6 @@ COPY jupyter_server_config.py /etc/jupyter/jupyter_server_config.py
 WORKDIR /notebooks
 COPY scripts/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
-RUN mkdir -p /tmp/comfy_models
 
 EXPOSE 8888 8188
 
