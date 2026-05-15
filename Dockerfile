@@ -55,7 +55,7 @@ RUN set -ex; \
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
     torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 \
     hf_transfer huggingface_hub[cli] \
-    --index-url https://download.pytorch.org/whl/cu124
+    --extra-index-url https://download.pytorch.org/whl/cu124
 
 # ------------------------------
 # 5. Core Libraries & Jupyter
