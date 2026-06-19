@@ -76,8 +76,8 @@ RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
 # ------------------------------
 # 7. Specialized Libraries (Nunchaku, Optimization)
 # ------------------------------
-RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
-    https://github.com/nunchaku-ai/nunchaku/releases/download/v1.0.1/nunchaku-1.0.1+torch2.6-cp313-cp313-linux_x86_64.whl
+# RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python \
+#     https://github.com/nunchaku-ai/nunchaku/releases/download/v1.0.1/nunchaku-1.0.1+torch2.6-cp313-cp313-linux_x86_64.whl
 
 RUN uv pip install --no-cache -p /opt/conda/envs/pyenv/bin/python sageattention
 
