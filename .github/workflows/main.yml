@@ -1,4 +1,4 @@
-name: Build and Push ComfyUI Docker
+name: Build and Push ComfyUI Runtime
 
 on:
   release:
@@ -6,8 +6,6 @@ on:
   workflow_dispatch:
 
 env:
-  # あなたのDockerHubユーザー名とリポジトリ名に合わせてください
-  # 例: user/gradient-comfyui
   IMAGE_NAME: gradient-comfyui
 
 jobs:
@@ -20,7 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ディスク容量確保 (CUDAイメージビルドに必須)
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -41,7 +38,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -65,5 +62,4 @@ jobs:
 
       - name: Clean up
         if: always()
-        run: |
-          docker system prune -af --volumes
+        run: docker system prune -af --volumes
