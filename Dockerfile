@@ -17,6 +17,7 @@ ARG TORCHVISION_VERSION=0.25.0
 ARG TORCHAUDIO_VERSION=2.10.0
 ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cu130
 ARG SAGEATTENTION_VERSION=2.2.0
+ARG SAGEATTENTION_REF=main
 ARG CUDA_COMPAT_PACKAGE=cuda-compat-13-1
 ARG INSTALL_CUDA_COMPAT=1
 
@@ -29,6 +30,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TORCH_CUDA_ARCH_LIST=8.6 \
     FORCE_CUDA=1 \
     MAX_JOBS=4 \
+    EXT_PARALLEL=4 \
+    NVCC_APPEND_FLAGS="--threads 8" \
     UV_LINK_MODE=copy \
     UV_HTTP_TIMEOUT=300 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -107,11 +110,20 @@ RUN uv pip install --python "${VIRTUAL_ENV}/bin/python" --no-cache \
       setuptools \
       wheel
 
-# SageAttention is compiled for the A4000 (sm_86). Build isolation is disabled
-# so it compiles against the already-pinned PyTorch/CUDA stack above.
-RUN uv pip install --python "${VIRTUAL_ENV}/bin/python" --no-cache \
-      --no-build-isolation \
-      "sageattention==${SAGEATTENTION_VERSION}"
+# SageAttention 2.2.0 is currently not reliably available from PyPI.
+# Build it from the official source tree against the pinned PyTorch/CUDA stack.
+# SAGEATTENTION_REF defaults to main and can be overridden with a commit/tag.
+RUN set -eux; \
+    git clone --depth 1 --branch "${SAGEATTENTION_REF}" \
+      https://github.com/thu-ml/SageAttention.git /tmp/SageAttention 2>/dev/null \
+    || { \
+      git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention; \
+      git -C /tmp/SageAttention checkout "${SAGEATTENTION_REF}"; \
+    }; \
+    cd /tmp/SageAttention; \
+    "${VIRTUAL_ENV}/bin/python" setup.py install; \
+    "${VIRTUAL_ENV}/bin/python" -c 'import sageattention; print("SageAttention import OK")'; \
+    rm -rf /tmp/SageAttention
 
 # Paperspace Gradient helper. Keep it isolated from the runtime dependency
 # resolver so it cannot replace the pinned torch stack.
@@ -126,7 +138,6 @@ RUN mkdir -p /opt/comfy-runtime \
       "torch==${TORCH_VERSION}" \
       "torchvision==${TORCHVISION_VERSION}" \
       "torchaudio==${TORCHAUDIO_VERSION}" \
-      "sageattention==${SAGEATTENTION_VERSION}" \
       > /opt/comfy-runtime/constraints.txt
 
 COPY jupyter_server_config.py /etc/jupyter/jupyter_server_config.py

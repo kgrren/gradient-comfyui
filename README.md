@@ -14,7 +14,7 @@ ComfyUI本体と`ComfyUI-Proxy-Patch`はDockerイメージに含めず、既存�
 - PyTorch 2.10.0 + cu130
 - torchvision 0.25.0
 - torchaudio 2.10.0
-- SageAttention 2.2.0 (RTX A4000 / sm_86向けビルド)
+- SageAttention 2.2.0 (official GitHub source build) (RTX A4000 / sm_86向けビルド)
 - JupyterLab
 - jupyter-server-proxy
 
