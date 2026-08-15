@@ -122,8 +122,9 @@ RUN set -eux; \
     }; \
     cd /tmp/SageAttention; \
     "${VIRTUAL_ENV}/bin/python" setup.py install; \
-    "${VIRTUAL_ENV}/bin/python" -c 'import sageattention; print("SageAttention import OK")'; \
-    rm -rf /tmp/SageAttention
+    cd /; \
+    rm -rf /tmp/SageAttention; \
+    "${VIRTUAL_ENV}/bin/python" -c 'import importlib.util, pathlib; spec=importlib.util.find_spec("sageattention"); assert spec and spec.submodule_search_locations; pkg=pathlib.Path(next(iter(spec.submodule_search_locations))); assert list(pkg.glob("_fused*.so")); assert list(pkg.glob("_qattn_sm80*.so")); print("SageAttention extensions installed:", pkg)'
 
 # Paperspace Gradient helper. Keep it isolated from the runtime dependency
 # resolver so it cannot replace the pinned torch stack.

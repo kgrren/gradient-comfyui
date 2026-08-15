@@ -206,3 +206,8 @@ uv pip freeze > /notebooks/pip-freeze.txt
 ```
 
 この3点があれば、CUDA/torch問題なのかComfyUI/custom node問題なのかをかなり早く切り分けできます。
+
+## SageAttention build verification
+
+SageAttention is compiled during the Docker build for `sm_86`. The build verifies that the compiled `_fused` and `_qattn_sm80` shared libraries were installed without importing the source checkout. Full import/GPU verification is performed by `runtime-check` on the Paperspace GPU host.
+
